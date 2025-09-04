@@ -2,12 +2,17 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import Card from '../components/Card'
 
-export default function Popular() {
+export default function Popular({ user, onEdit, onDelete }) {
   const [characters, setCharacters] = useState([])
 
   useEffect(() => {
     fetchPopular()
   }, [])
+
+  const handleDelete = async (characterId) => {
+    await onDelete(characterId)
+    fetchPopular() // Refresh the list after deletion
+  }
 
   async function fetchPopular() {
     const { data, error } = await supabase
@@ -18,28 +23,49 @@ export default function Popular() {
   }
 
   async function handleUpvote(id) {
-    // First get the current upvotes value
-    const { data: currentData, error: fetchError } = await supabase
-      .from('characters')
-      .select('upvotes')
-      .eq('id', id)
-      .single()
+    try {
+      // Optimistically update the UI first
+      setCharacters(prevCharacters => 
+        prevCharacters.map(char => 
+          char.id === id 
+            ? { ...char, upvotes: (char.upvotes || 0) + 1 }
+            : char
+        )
+      )
 
-    if (fetchError) {
-      console.error('Error fetching current upvotes:', fetchError)
-      return
-    }
+      // Get current upvotes from database
+      const { data: currentData, error: fetchError } = await supabase
+        .from('characters')
+        .select('upvotes')
+        .eq('id', id)
+        .single()
 
-    // Update with the incremented value
-    const { error } = await supabase
-      .from('characters')
-      .update({ upvotes: (currentData.upvotes || 0) + 1 })
-      .eq('id', id)
-    
-    if (!error) {
-      fetchPopular()
-    } else {
+      if (fetchError) {
+        console.error('Error fetching current upvotes:', fetchError)
+        // Revert the optimistic update
+        fetchPopular()
+        return
+      }
+
+      // Update in database
+      const { error } = await supabase
+        .from('characters')
+        .update({ upvotes: (currentData.upvotes || 0) + 1 })
+        .eq('id', id)
+      
+      if (error) {
+        console.error('Error upvoting character:', error)
+        // Revert the optimistic update
+        fetchPopular()
+        return
+      }
+
+      // Fetch fresh data to ensure consistency
+      await fetchPopular()
+    } catch (error) {
       console.error('Error upvoting character:', error)
+      // Revert the optimistic update
+      fetchPopular()
     }
   }
 
@@ -53,7 +79,7 @@ export default function Popular() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
         {characters.map((char) => (
-          <Card key={char.id} character={char} onUpvote={handleUpvote} />
+          <Card key={char.id} character={char} onUpvote={handleUpvote} currentUser={user} onEdit={onEdit} onDelete={handleDelete} />
         ))}
       </div>
     </div>

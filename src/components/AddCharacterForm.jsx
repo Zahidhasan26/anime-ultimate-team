@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { toast } from 'react-toastify'
 
-export default function AddCharacterForm({ onCreated }) {
+export default function AddCharacterForm({ onCreated, user }) {
   const [formData, setFormData] = useState({
     name: '',
     anime: '',
@@ -17,10 +17,17 @@ export default function AddCharacterForm({ onCreated }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Add default upvotes value
+    if (!user) {
+      toast.error('Please login to create characters')
+      return
+    }
+
+    // Add default upvotes value and user info
     const characterData = {
       ...formData,
-      upvotes: 0
+      upvotes: 0,
+      created_by: user.id,
+      creator_username: user.user_metadata?.username || user.email.split('@')[0]
     }
 
     const { data, error } = await supabase
