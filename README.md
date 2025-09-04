@@ -4,6 +4,14 @@
 
 This web app allows users to create, manage, and discover anime characters while building their ultimate anime team. Users can authenticate, create character profiles, upvote favorites, and manage their own character submissions.
 
+## Demo
+
+Here's a walkthrough of the Ultimate Anime Team Builder in action:
+
+<img src='https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExcHl0Z2R0eHozYTNocDIwMncxZ3Z1OGpvMHM0YzJnNmx1OG9pZGV2diZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/MMWmiIIwEI2AXhd0ve/giphy.gif' width='600' alt='Ultimate Anime Team Builder Demo' />
+
+*GIF showcasing character creation, team building, authentication, and upvoting features*
+
 
 
 ##  Features Overview
